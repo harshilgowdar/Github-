@@ -1,0 +1,657 @@
+// Include Necessary Libraries
+
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
+#include <ctype.h>
+
+// Define the maximum number of students
+#define MAX_STUDENTS 100
+#define MAX_NAME_LENGTH 100
+#define FILENAME "students.dat"
+
+
+//Struct for Student Record
+
+typedef struct {
+    int id;  // Student ID
+    char name[MAX_NAME_LENGTH];  // Student Name
+    int age;  // Student Age
+    float grade;  // Student Grade
+} Student;
+
+
+//Declare Global Variables
+
+Student students[MAX_STUDENTS];
+int num_students = 0;
+
+
+//Function to Add a Student
+
+void addStudent() {
+    if (num_students >= MAX_STUDENTS) {
+        printf("Cannot add more students. Maximum limit reached.\n");
+        return;
+    }
+
+    Student newStudent;
+    printf("Enter Student ID: ");
+    scanf("%d", &newStudent.id);
+
+    printf("Enter Student Name: ");
+    getchar();  // To clear the buffer
+    fgets(newStudent.name, sizeof(newStudent.name), stdin);
+    newStudent.name[strcspn(newStudent.name, "\n")] = '\0';  // Remove newline character
+
+    printf("Enter Student Age: ");
+    scanf("%d", &newStudent.age);
+
+    printf("Enter Student Grade: ");
+    scanf("%f", &newStudent.grade);
+
+    // Add the new student to the array
+    students[num_students] = newStudent;
+    num_students++;
+
+    printf("Student added successfully!\n");
+}
+
+
+
+//Function to Display All Students
+
+void displayStudents() {
+    if (num_students == 0) {
+        printf("No students to display.\n");
+        return;
+    }
+
+    printf("Student Records:\n");
+    for (int i = 0; i < num_students; i++) {
+        printf("ID: %d\n", students[i].id);
+        printf("Name: %s\n", students[i].name);
+        printf("Age: %d\n", students[i].age);
+        printf("Grade: %.2f\n\n", students[i].grade);
+    }
+}
+
+
+//Function to Edit a Student's Record
+
+
+void editStudent() {
+    int id, found = 0;
+    printf("Enter Student ID to edit: ");
+    scanf("%d", &id);
+
+    for (int i = 0; i < num_students; i++) {
+        if (students[i].id == id) {
+            found = 1;
+            printf("Editing Student: %s\n", students[i].name);
+            printf("Enter new Name: ");
+            getchar();  // Clear the buffer
+            fgets(students[i].name, sizeof(students[i].name), stdin);
+            students[i].name[strcspn(students[i].name, "\n")] = '\0';  // Remove newline
+
+            printf("Enter new Age: ");
+            scanf("%d", &students[i].age);
+
+            printf("Enter new Grade: ");
+            scanf("%f", &students[i].grade);
+
+            printf("Student updated successfully!\n");
+            break;
+        }
+    }
+
+    if (!found) {
+        printf("Student with ID %d not found.\n", id);
+    }
+}
+
+
+//Function to Delete a Student's Record
+
+void deleteStudent() {
+    int id, found = 0;
+    printf("Enter Student ID to delete: ");
+    scanf("%d", &id);
+
+    for (int i = 0; i < num_students; i++) {
+        if (students[i].id == id) {
+            found = 1;
+            // Shift all subsequent students one position left
+            for (int j = i; j < num_students - 1; j++) {
+                students[j] = students[j + 1];
+            }
+            num_students--;  // Decrease the student count
+            printf("Student with ID %d deleted successfully!\n", id);
+            break;
+        }
+    }
+
+    if (!found) {
+        printf("Student with ID %d not found.\n", id);
+    }
+}
+
+
+
+//Function to Sort Students by Grade
+
+
+void sortStudentsByGrade() {
+    for (int i = 0; i < num_students - 1; i++) {
+        for (int j = i + 1; j < num_students; j++) {
+            if (students[i].grade < students[j].grade) {
+                // Swap students[i] and students[j]
+                Student temp = students[i];
+                students[i] = students[j];
+                students[j] = temp;
+            }
+        }
+    }
+    printf("Students sorted by grade.\n");
+}
+
+
+
+//Function to Save Students to a File
+
+
+void saveStudentsToFile() {
+    FILE *file = fopen(FILENAME, "wb");
+    if (file == NULL) {
+        printf("Error opening file for saving.\n");
+        return;
+    }
+
+    fwrite(&num_students, sizeof(int), 1, file);
+    fwrite(students, sizeof(Student), num_students, file);
+
+    fclose(file);
+    printf("Students saved to file successfully.\n");
+}
+
+
+//Function to Load Students from a File
+
+
+void loadStudentsFromFile() {
+    FILE *file = fopen(FILENAME, "rb");
+    if (file == NULL) {
+        printf("No saved data found. Starting fresh.\n");
+        return;
+    }
+
+    fread(&num_students, sizeof(int), 1, file);
+    fread(students, sizeof(Student), num_students, file);
+
+    fclose(file);
+    printf("Students loaded from file successfully.\n");
+}
+
+
+
+//Menu Function
+
+
+void displayMenu() {
+    printf("\nStudent Record System\n");
+    printf("1. Add Student\n");
+    printf("2. Display All Students\n");
+    printf("3. Edit Student\n");
+    printf("4. Delete Student\n");
+    printf("5. Sort Students by Grade\n");
+    printf("6. Save Students to File\n");
+    printf("7. Load Students from File\n");
+    printf("8. Exit\n");
+}
+
+
+
+//Input Validation Functions
+
+
+
+// Function to check if an integer is a valid ID
+int isValidID(int id) {
+    return id > 0; // Simple check: ID must be positive
+}
+
+// Function to check if age is within a reasonable range
+int isValidAge(int age) {
+    return (age >= 18 && age <= 100); // Assume ages between 18 and 100 are valid
+}
+
+// Function to check if grade is within the valid range
+int isValidGrade(float grade) {
+    return (grade >= 0.0f && grade <= 100.0f); // Grade must be between 0 and 100
+}
+
+
+
+//Main Function
+
+
+
+int main() {
+    int choice;
+    loadStudentsFromFile();  // Load students from file when the program starts
+
+    while (1) {
+        displayMenu();  // Show the menu
+        printf("Enter your choice: ");
+        scanf("%d", &choice);
+
+        switch (choice) {
+            case 1:
+                addStudent();  // Add a student
+                break;
+            case 2:
+                displayStudents();  // Display all students
+                break;
+            case 3:
+                editStudent();  // Edit a student
+                break;
+            case 4:
+                deleteStudent();  // Delete a student
+                break;
+            case 5:
+                sortStudentsByGrade();  // Sort students by grade
+                break;
+            case 6:
+                saveStudentsToFile();  // Save students to a file
+                break;
+            case 7:
+                loadStudentsFromFile();  // Load students from a file
+                break;
+            case 8:
+                saveStudentsToFile();  // Ensure data is saved before exiting
+                printf("Exiting the system...\n");
+                return 0;  // Exit the program
+            default:
+                printf("Invalid choice. Please try again.\n");
+        }
+    }
+
+    
+
+int globalVar = 100; // Global variable
+
+// Function to demonstrate local variables
+void localVariableDemo() {
+    int localVar = 50; // Local variable
+    printf("Inside function - Local Variable: %d\n", localVar);
+}
+
+// Function to demonstrate static variables
+void staticVariableDemo() {
+    static int staticVar = 0; // Static variable
+    staticVar++;
+    printf("Inside staticVariableDemo - Static Variable: %d\n", staticVar);
+}
+
+// Function to demonstrate constant variables
+void constantVariableDemo() {
+    const int constantVar = 10; // Constant variable
+    printf("Inside function - Constant Variable: %d\n", constantVar);
+    // constantVar = 20; // Uncommenting this line will cause an error
+}
+
+// Function to demonstrate variable scope
+void variableScopeDemo() {
+    int x = 10; // Local variable in this function
+    if (x == 10) {
+        int y = 20; // Local variable inside an if block
+        printf("Inside if block - x: %d, y: %d\n", x, y);
+    }
+    // printf("Outside if block - y: %d\n", y); // Uncommenting this will cause an error as y is out of scope
+}
+
+// Demonstrating arithmetic operations with variables
+void arithmeticOperations() {
+    int a = 5, b = 3;
+    int sum, difference, product, quotient, remainder;
+
+    sum = a + b;
+    difference = a - b;
+    product = a * b;
+    quotient = a / b;
+    remainder = a % b;
+
+    printf("Arithmetic Operations:\n");
+    printf("Sum: %d + %d = %d\n", a, b, sum);
+    printf("Difference: %d - %d = %d\n", a, b, difference);
+    printf("Product: %d * %d = %d\n", a, b, product);
+    printf("Quotient: %d / %d = %d\n", a, b, quotient);
+    printf("Remainder: %d %% %d = %d\n", a, b, remainder);
+}
+
+// Function to demonstrate type casting
+void typeCasting() {
+    float floatVar = 9.8;
+    int intVar;
+
+    // Implicit casting (float to int)
+    intVar = floatVar; // The fractional part will be discarded
+    printf("Type Casting:\n");
+    printf("Float: %f cast to Int: %d\n", floatVar, intVar);
+
+    // Explicit casting (int to float)
+    intVar = 5;
+    floatVar = (float)intVar; // Casting int to float
+    printf("Int: %d cast to Float: %f\n", intVar, floatVar);
+}
+
+// Demonstrating use of arrays with variables
+void arrayDemo() {
+    int numbers[5] = {1, 2, 3, 4, 5};
+
+    printf("Array Demo:\n");
+    for (int i = 0; i < 5; i++) {
+        printf("numbers[%d] = %d\n", i, numbers[i]);
+    }
+}
+
+// Function to demonstrate pointer variables
+void pointerDemo() {
+    int num = 100;
+    int *ptr = &num; // Pointer to num
+
+    printf("Pointer Demo:\n");
+    printf("Address of num: %p\n", &num);
+    printf("Value of num: %d\n", num);
+    printf("Value pointed by ptr: %d\n", *ptr);
+    printf("Address stored in ptr: %p\n", ptr);
+}
+
+// Function to demonstrate variable initialization
+void variableInitialization() {
+    int a = 0, b = 10, c = 20;
+
+    printf("Variable Initialization:\n");
+    printf("a = %d, b = %d, c = %d\n", a, b, c);
+}
+
+// Function to demonstrate multiple variable declarations
+void multipleDeclarations() {
+    int x = 10, y = 20, z = 30;
+
+    printf("Multiple Variable Declarations:\n");
+    printf("x = %d, y = %d, z = %d\n", x, y, z);
+}
+
+// Function to demonstrate dynamic variable initialization
+void dynamicInitialization() {
+    int *dynamicVar = (int *)malloc(sizeof(int)); // Dynamic memory allocation
+    *dynamicVar = 100;
+
+    printf("Dynamic Variable Initialization:\n");
+    printf("Dynamic Variable Value: %d\n", *dynamicVar);
+
+    free(dynamicVar); // Don't forget to free dynamically allocated memory
+}
+
+// Function to demonstrate enums as variables
+enum Day { Sunday, Monday, Tuesday, Wednesday, Thursday, Friday, Saturday };
+void enumDemo() {
+    enum Day today = Wednesday;
+
+    printf("Enum Demo:\n");
+    printf("Today is day number: %d\n", today);
+}
+
+// Function to demonstrate variable shadowing
+void variableShadowingDemo() {
+    int globalVar = 200; // Local variable shadowing globalVar
+
+    printf("Variable Shadowing Demo:\n");
+    printf("Local variable with same name as globalVar: %d\n", globalVar);
+    printf("Global variable: %d\n", ::globalVar); // Accessing global variable using scope resolution
+}
+
+// Function to demonstrate global variables
+void globalVariableDemo() {
+    printf("Global Variable Demo:\n");
+    printf("Global variable value: %d\n", globalVar);
+}
+
+// Function to demonstrate extern variable usage
+extern int externalVar; // External variable declaration
+void externDemo() {
+    printf("Extern Variable Demo:\n");
+    printf("External variable value: %d\n", externalVar);
+}
+
+// Initializing and demonstrating constants
+#define MAX_SIZE 100
+void constantDemo() {
+    printf("Constant Demo:\n");
+    printf("MAX_SIZE: %d\n", MAX_SIZE);
+}
+
+int externalVar = 500; // External variable definition
+
+// Main function that calls all the demos
+int main() {
+    printf("Variable Demo Program\n");
+
+    // Demonstrating local and static variables
+    localVariableDemo();
+    staticVariableDemo();
+
+    // Demonstrating constant variables
+    constantVariableDemo();
+
+    // Demonstrating variable scope
+    variableScopeDemo();
+
+    // Demonstrating arithmetic operations
+    arithmeticOperations();
+
+    // Demonstrating type casting
+    typeCasting();
+
+    // Demonstrating arrays
+    arrayDemo();
+
+    // Demonstrating pointers
+    pointerDemo();
+
+    // Demonstrating variable initialization
+    variableInitialization();
+
+    // Demonstrating multiple declarations
+    multipleDeclarations();
+
+    // Demonstrating dynamic initialization
+    dynamicInitialization();
+
+    // Demonstrating enum usage
+    enumDemo();
+
+    // Demonstrating variable shadowing
+    variableShadowingDemo();
+
+    // Demonstrating global variables
+    globalVariableDemo();
+
+    // Demonstrating extern variables
+    externDemo();
+
+    // Demonstrating constants
+    constantDemo();
+
+
+// Function to demonstrate using variables in conditional statements
+void conditionalDemo() {
+    int a = 10, b = 20;
+    
+    if (a > b) {
+        printf("Condition: a is greater than b\n");
+    } else {
+        printf("Condition: a is not greater than b\n");
+    }
+    
+    // Using ternary operator
+    int max = (a > b) ? a : b;
+    printf("Max value between a and b: %d\n", max);
+}
+
+// Function to demonstrate variables in loops
+void loopDemo() {
+    int i;
+
+    printf("Loop Demo:\n");
+    for (i = 1; i <= 5; i++) {
+        printf("i = %d\n", i);
+    }
+    
+    printf("While loop Demo:\n");
+    i = 1;
+    while (i <= 5) {
+        printf("i = %d\n", i);
+        i++;
+    }
+}
+
+// Function to demonstrate variable passing by value and reference
+void passByValueAndReference(int a, int *b) {
+    a = a + 5; // Pass by value, this won't change the original 'a'
+    *b = *b + 5; // Pass by reference, this will change the original 'b'
+    printf("Pass by Value and Reference:\n");
+    printf("a (after modification): %d\n", a);
+    printf("b (after modification): %d\n", *b);
+}
+
+// Function to demonstrate using a variable in switch-case
+void switchCaseDemo() {
+    int day = 3;
+
+    printf("Switch-Case Demo:\n");
+    switch (day) {
+        case 1:
+            printf("Today is Sunday\n");
+            break;
+        case 2:
+            printf("Today is Monday\n");
+            break;
+        case 3:
+            printf("Today is Tuesday\n");
+            break;
+        default:
+            printf("Invalid day\n");
+    }
+}
+
+// Function to demonstrate the use of variables in string manipulation
+void stringVariableDemo() {
+    char str[20] = "Hello, C Programming!";
+    printf("String Variable Demo:\n");
+    printf("String: %s\n", str);
+    
+    // Modifying a character in the string
+    str[6] = 'X';
+    printf("Modified String: %s\n", str);
+}
+
+// Function to demonstrate variables with floating-point data types
+void floatingPointDemo() {
+    float f1 = 3.14159, f2 = 2.71828;
+    double d1 = 1.6180339887;
+
+    printf("Floating Point Demo:\n");
+    printf("Float value 1: %.5f\n", f1);
+    printf("Float value 2: %.5f\n", f2);
+    printf("Double value 1: %.10lf\n", d1);
+}
+
+// Function to demonstrate size of different variable types
+void sizeOfDemo() {
+    int intVar = 10;
+    float floatVar = 3.14;
+    double doubleVar = 3.1415926535;
+    char charVar = 'A';
+
+    printf("Size of Demo:\n");
+    printf("Size of int: %zu bytes\n", sizeof(intVar));
+    printf("Size of float: %zu bytes\n", sizeof(floatVar));
+    printf("Size of double: %zu bytes\n", sizeof(doubleVar));
+    printf("Size of char: %zu bytes\n", sizeof(charVar));
+}
+
+// Function to demonstrate the use of variables with a struct
+struct Person {
+    char name[50];
+    int age;
+};
+
+void structDemo() {
+    struct Person person1 = {"John Doe", 30};
+
+    printf("Struct Demo:\n");
+    printf("Name: %s, Age: %d\n", person1.name, person1.age);
+}
+
+// Function to demonstrate enum with switch-case
+void enumSwitchCaseDemo() {
+    enum Day { Sunday, Monday, Tuesday, Wednesday, Thursday, Friday, Saturday };
+    enum Day today = Friday;
+
+    printf("Enum with Switch-Case Demo:\n");
+    switch (today) {
+        case Sunday: printf("Today is Sunday\n"); break;
+        case Monday: printf("Today is Monday\n"); break;
+        case Friday: printf("Today is Friday\n"); break;
+        default: printf("Unknown day\n"); break;
+    }
+}
+
+// Function to demonstrate passing arrays to functions
+void arrayFunctionDemo(int arr[], int size) {
+    printf("Array Function Demo:\n");
+    for (int i = 0; i < size; i++) {
+        printf("Element %d: %d\n", i, arr[i]);
+    }
+}
+
+int main() {
+    printf("Extended Variable Demo Program\n");
+
+    // Demonstrating conditional statements with variables
+    conditionalDemo();
+
+    // Demonstrating variables in loops
+    loopDemo();
+
+    // Demonstrating pass by value and reference
+    int val = 10;
+    passByValueAndReference(val, &val);
+
+    // Demonstrating switch-case with variables
+    switchCaseDemo();
+
+    // Demonstrating string manipulation with variables
+    stringVariableDemo();
+
+    // Demonstrating floating-point variables
+    floatingPointDemo();
+
+    // Demonstrating sizeof operator with variables
+    sizeOfDemo();
+
+    // Demonstrating struct with variables
+    structDemo();
+
+    // Demonstrating enum in switch-case
+    enumSwitchCaseDemo();
+
+    // Demonstrating passing arrays to functions
+    int numbers[] = {1, 2, 3, 4, 5};
+    arrayFunctionDemo(numbers, 5);
+
+    return 0;
+}
+
